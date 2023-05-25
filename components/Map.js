@@ -9,7 +9,13 @@ import { pushInfo } from '../reducers/header';
 import { pushMeet, removeMeet, updateMeet } from '../reducers/meeting';
 import { pushPosition } from '../reducers/position';
 import { restoreLife } from '../reducers/inventory';
+import Pusher from 'pusher-js';
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL;
+
+const pusher = new Pusher('2945f99e59578cb5c02a', { cluster: 'eu' });
+const BACKEND_ADDRESS = BACKEND_URL;
 
 function Map() {
   const dispatch = useDispatch();
@@ -35,8 +41,8 @@ function Map() {
   const [isRotationValid, setIsRotationValid] = useState(false);
 
   //data players
+  const playerNames_local =  useSelector((state) => state.games.playerNames_local) // lecture de la DB via redux
   let playerTemp = useSelector((state) => state.inventory.value) // lecture de la DB via redux
-  const playerNames_local = useSelector((state) => state.games.playerNames_local) // lecture de la DB via redux
 
   const [player, setPlayer] = useState(playerTemp)
   const [playerTurn, setPlayerTurn] = useState(0); //player[playerTurn] 
@@ -68,6 +74,8 @@ function Map() {
         setNbTours(nbTours +1) 
         setMooves(0); 
       }
+      // the game must could be saved here
+      console.log('The game must be saved here') 
     }
     
     if(isMeetingSkiped && mooves === 4){
@@ -314,6 +322,40 @@ function Map() {
       )
     }
   }  
+
+  ///////////////
+  const pusherUser = useSelector((state) => state.games.playerNames_local[0]);
+
+  useEffect(() => {
+    (async () => {
+        fetch(`${BACKEND_ADDRESS}/users/${pusherUser}`, { method: 'PUT' });
+        console.log('Pusher: Mount after fetch');
+
+        const channel = await pusher.subscribe('karak-development');
+        channel.bind('pusher:subscription_succeeded', () => {
+            channel.bind('message', handleReceiveMessage);
+        });
+
+        pusher.log = (message) => {
+            if (window.console && window.console.log) {
+                window.console.log('Pusher: it\'s a pusher.log: ', message);
+            }
+        };
+    })();
+
+    return () => {
+        console.log('Pusher: leave');
+        fetch(`${BACKEND_ADDRESS}/users/${pusherUser}`, { method: 'DELETE' });
+    }
+}, [pusherUser]);
+
+const handleReceiveMessage = (data) => {
+  console.log('Pusher: Entry in handleReceiveMessage, messages added:  ', data);
+  // setMessages(messages => [...messages, data]);
+};
+
+
+  //////////////
 
   const map = {display: 'flex', width: `${col*100}px`, height: `${row*100}px`, flexDirection: 'row', flexWrap: 'wrap'}
 
