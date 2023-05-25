@@ -2,7 +2,6 @@
     margin: 0;
     padding: 0;
     flex: 1;
-    height: 10vh;
     display: flex;
     flex-direction: column;
     width: 100vw;
@@ -30,7 +29,6 @@
 }
 
 .map {
-    flex: 6;
     width: 100vw;
     overflow: hidden;
 }

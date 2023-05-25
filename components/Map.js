@@ -8,23 +8,16 @@ import { useSelector, useDispatch } from 'react-redux';
 import { pushInfo } from '../reducers/header';
 import { pushMeet, removeMeet, updateMeet } from '../reducers/meeting';
 import { pushPosition } from '../reducers/position';
-import { restoreLife } from '../reducers/inventory';
 import Pusher from 'pusher-js';
+import { setTurn, setCoords, restoreLife } from '../reducers/games';
 
 
 const pusher = new Pusher('2945f99e59578cb5c02a', { cluster: 'eu' });
 
 function Map() {
+
   const dispatch = useDispatch();
 
-  //globals
-  const row = 41;
-  const col = 41;
-  const rowmid = Math.floor(row/2);
-  const colmid = Math.floor(col/2); 
-  const dataEmpty = {type: 'empty',  "isRotate": false, "rotation": 0, tile:{img: '/tiles/empty.png', data: [0,0,0,0], type: 'empty'}}
-
-  
   //data tuiles
   let dataPioche = useSelector((state) => state.games.game.tiles) // lecture de la DB via redux
   const [dataPiocheTemp, setDataPiocheTemp] = useState(dataPioche)
@@ -38,23 +31,21 @@ function Map() {
   const [isRotationValid, setIsRotationValid] = useState(false);
 
   //data players
-  const playerNames_local =  useSelector((state) => state.games.playerNames_local) // lecture de la DB via redux
-  let playerTemp = useSelector((state) => state.inventory.value) // lecture de la DB via redux
-
-  const [player, setPlayer] = useState(playerTemp)
-  const [playerTurn, setPlayerTurn] = useState(0); //player[playerTurn] 
+  let player = useSelector((state) => state.games.game.players) // lecture de la DB via redux
+  const playerNames_local = useSelector((state) => state.games.playerNames_local) // lecture de la DB via redux
+  const playerActif = useSelector((state) => state.games.game.players.findIndex( e => e.turn ))
   const [mooves, setMooves] = useState(0);
   const [nbTours, setNbTours] = useState(1);
 
   //data meetings
-  let meetingReducer = useSelector((state) => state.meeting.value.find(e => e.coords === player[playerTurn].coords))
-  let isMeetingResolved = useSelector((state) => state.meeting.value.find(e => e.coords === player[playerTurn].coords)?.isResolved)
-  let isMeetingSkiped = useSelector((state) => state.meeting.value.find(e => e.coords === player[playerTurn].coords)?.isSkiped)
-  let meeting = dataPiocheTemp[playedCoords.findIndex(coord => coord === player[playerTurn].coords)].meeting
+  let meetingReducer = useSelector((state) => state.meeting.value.find(e => e.coords === player[playerActif].coords))
+  let isMeetingResolved = useSelector((state) => state.meeting.value.find(e => e.coords === player[playerActif].coords)?.isResolved)
+  let isMeetingSkiped = useSelector((state) => state.meeting.value.find(e => e.coords === player[playerActif].coords)?.isSkiped)
+  let meeting = dataPiocheTemp[playedCoords.findIndex(coord => coord === player[playerActif].coords)].meeting
 
   //powers identification
-  const isArgentus = (player[playerTurn].type === 'Argentus');
-  const isAderyn = (player[playerTurn].type === 'Aderyn');
+  const isArgentus = (player[playerActif].type === 'Argentus');
+  const isAderyn = (player[playerActif].type === 'Aderyn');
   
   // game identification
   const gameId = useSelector((state) => state.games.id)
@@ -63,14 +54,13 @@ function Map() {
   if(mooves >= 4){
     //meeting
     if(meeting?.mob){
-      console.log("dispatch meeting 1")
-      dispatch(pushMeet(dataPiocheTemp[playedCoords.findIndex(coord => coord === player[playerTurn].coords) +1].meeting))
+      dispatch(pushMeet(dataPiocheTemp[playedCoords.findIndex(coord => coord === player[playerActif].coords) +1].meeting))
     }else{
-      if(playerTurn < player.length -1){
-        setPlayerTurn(playerTurn +1)
+      if(playerActif < player.length -1){
+        dispatch(setTurn(playerActif +1))
         setMooves(0); 
       }else{
-        setPlayerTurn(0);
+        dispatch(setTurn(0))
         setNbTours(nbTours +1) 
         setMooves(0); 
       }
@@ -83,11 +73,11 @@ function Map() {
     }
     
     if(isMeetingSkiped && mooves === 4){
-      if(playerTurn < player.length -1){
-        setPlayerTurn(playerTurn +1)
+      if(playerActif < player.length -1){
+        dispatch(setTurn(playerActif +1))
         setMooves(0); 
       }else{
-        setPlayerTurn(0);
+        dispatch(setTurn(0))
         setNbTours(nbTours +1) 
         setMooves(0); 
       }
@@ -101,21 +91,19 @@ function Map() {
   if(!isOpen && meeting?.mob === 'closed_chest' && !isAderyn) msg = 'Ouvres le coffre ou continues d’avancer..';
   if(!isOpen && meeting && (isAderyn && mooves < 4)) msg = 'Combats ou continues d’avancer..';
   if(!isOpen && meeting?.mob === 'closed_chest' && isAderyn) msg = 'Ouvres le coffre ou continues d’avancer..';
-  dispatch( pushInfo( {username: player[playerTurn].username, type:player[playerTurn].type, nbTours, mooves, msg} ) );
-  dispatch( pushPosition( {position: player[playerTurn].coords} ) )
+  dispatch( pushInfo( {username: player[playerActif].username, type:player[playerActif].type, nbTours, mooves, msg} ) );
+  dispatch( pushPosition( {position: player[playerActif].coords} ) )
 
 
-  useEffect(() => {
-    console.log(playerTemp)
-  
+  useEffect(() => {  
     // dernière id, carte jouée par le joueur
     let playersTemp = JSON.parse(JSON.stringify(player))
-    const previousCoords = playersTemp[playerTurn].prevCoords.split(';');
+    const previousCoords = playersTemp[playerActif].prevCoords.split(';');
 
     // avant-dernière id, carte jouée par le joueur
-    const lastTileID = player[playerTurn].coords; 
+    const lastTileID = player[playerActif].coords; 
     const coords = lastTileID.split(';');
-    const lastTileData = dataPiocheTemp[playedCoords.findIndex(coord => coord === player[playerTurn].coords)].tile.data
+    const lastTileData = dataPiocheTemp[playedCoords.findIndex(coord => coord === player[playerActif].coords)].tile.data
     
     // logique rotation
     if( Number(coords[0] === previousCoords[0] && coords[1] < previousCoords[1]) ) setIsRotationValid(lastTileData[2] === 1)//gauche
@@ -128,29 +116,30 @@ function Map() {
     if(isMeetingResolved ){ //|| isMeetingSkiped
         dispatch(removeMeet(meetingReducer))
         let pioche = JSON.parse(JSON.stringify(dataPiocheTemp));
-        let i = playedCoords.findIndex(coord => coord === player[playerTurn].coords);
+        let i = playedCoords.findIndex(coord => coord === player[playerActif].coords);
         pioche[i].meeting = null
         setDataPiocheTemp(pioche);
         setMooves(0)
 
-        if(playerTurn < player.length -1){
-          setPlayerTurn(playerTurn +1)
+        if(playerActif < player.length -1){
+          dispatch(setTurn(playerActif +1))
           dispatch(updateMeet({...meetingReducer, isSkiped: false}))
         }else{
-          setPlayerTurn(0);
+          dispatch(setTurn(0))
           setNbTours(nbTours +1)
           dispatch(updateMeet({...meetingReducer, isSkiped: false}))
         }
 
     }else if(isMeetingSkiped && meeting.mob !== 'closed_chest'){
-        player[playerTurn].coords = player[playerTurn].prevCoords
+        const id = player[playerActif].prevCoords
+        dispatch(setCoords({playerActif, id}))
         setMooves(0)
         dispatch(updateMeet({...meetingReducer, isSkiped: false}))
 
-        if(playerTurn < player.length -1){
-          setPlayerTurn(playerTurn +1)
+        if(playerActif < player.length -1){
+          dispatch(setTurn(playerActif +1))
         }else{
-          setPlayerTurn(0);
+          dispatch(setTurn(0))
           setNbTours(nbTours +1)
         }
 
@@ -158,14 +147,14 @@ function Map() {
         dispatch(updateMeet({...meetingReducer, isSkiped: false}))
         setMooves(0)
 
-        if(playerTurn < player.length -1){
-          setPlayerTurn(playerTurn +1)
+        if(playerActif < player.length -1){
+          dispatch(setTurn(playerActif +1))
         }else{
-          setPlayerTurn(0);
+          dispatch(setTurn(0))
           setNbTours(nbTours +1)
         }
     }
-  },[isMeetingResolved, isMeetingSkiped, player, playerTurn])
+  },[isMeetingResolved, isMeetingSkiped, player, playerActif])
   
   let modalValid;
   if(isRotationValid)
@@ -179,8 +168,7 @@ function Map() {
 
         // cf. onTileClick
         if(!isMeetingSkiped || !isMeetingResolved){
-          console.log("dispatch meeting 2")
-          dispatch(pushMeet({meeting: dataPiocheTemp[playedCoords.findIndex(coord => coord === player[playerTurn].coords)].meeting, coords: player[playerTurn].coords, isResolved: isMeetingResolved, isSkiped: isMeetingSkiped}))
+          dispatch(pushMeet({meeting: dataPiocheTemp[playedCoords.findIndex(coord => coord === player[playerActif].coords)].meeting, coords: player[playerActif].coords, isResolved: isMeetingResolved, isSkiped: isMeetingSkiped}))
         }
       }} 
       icon={faCheck} />
@@ -223,16 +211,15 @@ function Map() {
   const onTileClick = (id) => {
     //fonctionnalité dégradée life fountain
     if(playedCoords.includes(id) && dataPiocheTemp[playedCoords.findIndex(coord => coord === id)].tile.specificity === 'fountain'){
-      dispatch(restoreLife(player[playerTurn].type))
+      dispatch(restoreLife(player[playerActif].type))
     }
 
     //meeting
     if(playedCoords.includes(id)) {
-      console.log("dispatch meeting 3")
-      dispatch(pushMeet(dataPiocheTemp[playedCoords.findIndex(coord => coord === player[playerTurn].coords) +1].meeting))
+      dispatch(pushMeet(dataPiocheTemp[playedCoords.findIndex(coord => coord === player[playerActif].coords) +1].meeting))
     }
     
-    if(isAderyn && playedCoords.includes(id) && dataPiocheTemp[playedCoords.findIndex(coord => coord === player[playerTurn].coords && playedCoords.includes(id)) +1].meeting) {
+    if(isAderyn && playedCoords.includes(id) && dataPiocheTemp[playedCoords.findIndex(coord => coord === player[playerActif].coords && playedCoords.includes(id)) +1].meeting) {
       setMooves(mooves +1)
     }else if(playedCoords.includes(id)){
       setMooves(mooves +1)
@@ -257,18 +244,16 @@ function Map() {
     };
 
     //attribuer les coordonnées de la dernière carte jouée par chaque joueur
-    let playerTemp = JSON.parse(JSON.stringify(player))
-    playerTemp[playerTurn].prevCoords = playerTemp[playerTurn].coords;
-    playerTemp[playerTurn].coords = id;
-    setPlayer(playerTemp);
+    dispatch(setCoords({playerActif, id}))
   };
 
   const carte = []
 
-  for (let i=0; i<row; i++){
+  for (let i=0; i<41; i++){
     
-    for (let j=0; j<col; j++){
+    for (let j=0; j<41; j++){
       
+      const dataEmpty = {type: 'empty', tile:{img: '/tiles/empty.png', data: [null,null,null,null]}}
       let card = dataEmpty
       let isPlayed = false
       let isPlayable = false
@@ -280,14 +265,14 @@ function Map() {
         }
         
         const portals = playedCoords.map((e,i)=> {return {isPortal: (dataPiocheTemp[i].tile.specificity === 'portal'), portalCoords: e }})
-        const lastTile = dataPiocheTemp[playedCoords.findIndex(coord => coord === player[playerTurn].coords)]
-        const lastTileData = dataPiocheTemp[playedCoords.findIndex(coord => coord === player[playerTurn].coords)].tile.data
-        const lastTileID = player[playerTurn].coords;
+        const lastTile = dataPiocheTemp[playedCoords.findIndex(coord => coord === player[playerActif].coords)]
+        const lastTileData = dataPiocheTemp[playedCoords.findIndex(coord => coord === player[playerActif].coords)].tile.data
+        const lastTileID = player[playerActif].coords;
         const coords = lastTileID.split(';');
         const x = Number(coords[0])
         const y = Number(coords[1])
                 
-        if(!isOpen && playerNames_local.includes(player[playerTurn].username)){
+        if(!isOpen && playerNames_local.includes(player[playerActif].username)){
           if(!meeting || (meeting.mob === 'closed_chest' && mooves < 4)|| (isAderyn && mooves < 4)){
             if(playedCoords.length < dataPiocheTemp.length){
               isPlayable = (
@@ -366,7 +351,7 @@ const handleReceiveMessage = (data) => {
 
   //////////////
 
-  const map = {display: 'flex', width: `${col*100}px`, height: `${row*100}px`, flexDirection: 'row', flexWrap: 'wrap'}
+  const map = {display: 'flex', width: `${41*100}px`, height: `${41*100}px`, flexDirection: 'row', flexWrap: 'wrap'}
 
   return (
     <TransformWrapper
