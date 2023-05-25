@@ -46,7 +46,13 @@ export const gamesSlice = createSlice({
 
 
 
-    ////////////mise à jour des players
+    //////////// mise à jour des tuiles
+    
+
+
+
+
+    //////////// mise à jour des players
     looseLife: (state, action) => { 
       if(state.game.players[state.game.players.findIndex(e => e.type === action.payload)].life > 0){
         state.game.players[state.game.players.findIndex(e => e.type === action.payload)].life -= 1;
@@ -59,7 +65,8 @@ export const gamesSlice = createSlice({
         state.game.players[state.game.players.findIndex(e => e.type === action.payload)].key = null;
     },
     updateInventory: (state, action) => {
-        const playerIndex = state.game.players[state.game.players.findIndex(e => e.type === action.payload.player)];
+        console.log(action.payload)
+        const playerIndex = state.game.players[state.game.players.findIndex(e => e.type === action.payload.playerType)];
         
         if(action.payload.loot === 'heal_portal' || action.payload.loot === 'magic_shot'){    
           const emptySlotIndex = playerIndex.scroll.findIndex(scrolls => scrolls === null);
@@ -111,5 +118,5 @@ export const gamesSlice = createSlice({
   },
 });
 
-export const { setId, addPlayerNames_local, setCreator, setPlayerHeroeNames, setGame,     looseLife, useKey, updateInventory, setTurn, setCoords } = gamesSlice.actions;
+export const { setId, addPlayerNames_local, setCreator, setPlayerHeroeNames, setGame,     looseLife, restoreLife, useKey, updateInventory, setTurn, setCoords } = gamesSlice.actions;
 export default gamesSlice.reducer;

@@ -12,12 +12,14 @@ function Meeting() {
     const dispatch = useDispatch();
 
     const meeting = useSelector((state) => state.meeting.value);
-    const player = useSelector((state) => state.header.value.type);
+    const playerActif = useSelector((state) => state.games.game.players.findIndex( e => e.turn ))
+    const playerType = useSelector((state) => state.games.game.players[playerActif].type)
     const mooves = useSelector((state) => state.header.value.mooves);
     const inventory = useSelector((state) => state.games.game.players);
-    const inventoryPlayer = inventory[inventory.findIndex(e => e.type === player)];
-    const position = useSelector((state) => state.position.value.position);
-    const actualMeeting = meeting.find(e => e.coords === position);
+    const inventoryPlayer = inventory[playerActif];
+    const playerPosition = useSelector((state) => state.games.game.players[playerActif].coords);
+    
+    const actualMeeting = meeting.find(e => e.coords === playerPosition);
 
     const [isModalCoffreOpen, setIsModalCoffreOpen] = useState(false);
     const [isModalCombatOpen, setIsModalCombatOpen] = useState(false);
@@ -52,8 +54,8 @@ function Meeting() {
                         type='button'
                         onClick={() => {
                             if(inventoryPlayer.key){
-                                dispatch(useKey(player))
-                                dispatch(updateInventory({loot: actualMeeting.meeting.loot, player}))
+                                dispatch(useKey(playerType))
+                                dispatch(updateInventory({loot: actualMeeting.meeting.loot, playerType}))
                                 dispatch(updateMeet({...actualMeeting, isResolved: true}))
                                 setIsModalCoffreOpen(false)
                             }
@@ -162,11 +164,15 @@ function Meeting() {
                         <button
                             style={{marginLeft: '20px'}}
                             type='button'
-                            onClick={() => { actualMeeting.meeting.mob === 'dragon' ? (dispatch(updateInventory({loot: actualMeeting.meeting.loot, player})), setShowScoreBoard(true)) :
+                            onClick={() => { 
+                                actualMeeting.meeting.mob === 'dragon' 
+                                ? 
+                                (dispatch(updateInventory({loot: actualMeeting.meeting.loot, playerType})), setShowScoreBoard(true)) 
+                                :
                                 (setShowLoot(false),
                                 dispatch(updateMeet({...actualMeeting, isResolved: true})),
                                 setIsModalCombatOpen(false),
-                                dispatch(updateInventory({loot: actualMeeting.meeting.loot, player})),
+                                dispatch(updateInventory({loot: actualMeeting.meeting.loot, playerType})),
                                 setFirstDice(null),
                                 setSecondDice(null),
                                 setTotalCombatDice(null),
@@ -187,7 +193,7 @@ function Meeting() {
                         if((totalCombatDice + totalStuffOnPlayer[1]) > actualMeeting.meeting.strength){
                             (setShowLoot(true), setShowButton(!showButton), setFirstDice(null), setSecondDice(null), setTotalCombatDice(null), setTotalStuffOnPlayer([null, null]))
                         }else{
-                            if((totalCombatDice + totalStuffOnPlayer[1]) < actualMeeting.meeting.strength){ dispatch(looseLife(player)) }
+                            if((totalCombatDice + totalStuffOnPlayer[1]) < actualMeeting.meeting.strength){ dispatch(looseLife(playerType)) }
                             (dispatch(updateMeet({...actualMeeting, isSkiped: true})), setIsModalCombatOpen(false), setShowButton(!showButton), setFirstDice(null), setSecondDice(null), setTotalCombatDice(null), setTotalStuffOnPlayer([null,null]))
                         }
                     }}>OK</button></>}
@@ -239,7 +245,7 @@ function Meeting() {
             setIsModalCoffreOpen(false);
             setIsModalCombatOpen(false)
         }
-    },[actualMeeting, player])
+    },[actualMeeting, playerActif])
     
     return (
             <div style={modalStyle}>
