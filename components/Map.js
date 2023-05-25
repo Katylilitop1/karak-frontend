@@ -11,11 +11,8 @@ import { pushPosition } from '../reducers/position';
 import { restoreLife } from '../reducers/inventory';
 import Pusher from 'pusher-js';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL;
 
 const pusher = new Pusher('2945f99e59578cb5c02a', { cluster: 'eu' });
-const BACKEND_ADDRESS = BACKEND_URL;
 
 function Map() {
   const dispatch = useDispatch();
@@ -59,6 +56,9 @@ function Map() {
   const isArgentus = (player[playerTurn].type === 'Argentus');
   const isAderyn = (player[playerTurn].type === 'Aderyn');
   
+  // game identification
+  const gameId = useSelector((state) => state.games.id)
+  const test_save = false
 
   if(mooves >= 4){
     //meeting
@@ -75,7 +75,11 @@ function Map() {
         setMooves(0); 
       }
       // the game must could be saved here
-      console.log('The game must be saved here') 
+      // go to next player in game
+      console.log('The game must be saved here')
+      if (test_save) {
+
+      } 
     }
     
     if(isMeetingSkiped && mooves === 4){
@@ -323,17 +327,20 @@ function Map() {
     }
   }  
 
-  ///////////////
+  // _________________________________________ pusher part
+
   const pusherUser = useSelector((state) => state.games.playerNames_local[0]);
 
   useEffect(() => {
+    let channel_global 
     (async () => {
-        fetch(`${BACKEND_ADDRESS}/users/${pusherUser}`, { method: 'PUT' });
-        console.log('Pusher: Mount after fetch');
+        /*  fetch(`${BACKEND_URL}/users/${pusherUser}`, { method: 'PUT' }); */
+        console.log('Pusher: subscribe to ', gameId);
 
         const channel = await pusher.subscribe('karak-development');
+        channel_global = channel
         channel.bind('pusher:subscription_succeeded', () => {
-            channel.bind('message', handleReceiveMessage);
+            channel.bind(gameId, handleReceiveMessage);
         });
 
         pusher.log = (message) => {
@@ -344,13 +351,15 @@ function Map() {
     })();
 
     return () => {
-        console.log('Pusher: leave');
-        fetch(`${BACKEND_ADDRESS}/users/${pusherUser}`, { method: 'DELETE' });
+        console.log('Pusher: disconnect on ', gameId);
+        if (channel_global) channel_global.unbind(gameId);
+        /* fetch(`${BACKEND_URL}/users/${pusherUser}`, { method: 'DELETE' }); */
     }
-}, [pusherUser]);
+}, [gameId]);
 
 const handleReceiveMessage = (data) => {
-  console.log('Pusher: Entry in handleReceiveMessage, messages added:  ', data);
+  console.log('Pusher: Entry in Map/handleReceiveMessage, message received:  ', data);
+  alert('Backend tells me ' + data)
   // setMessages(messages => [...messages, data]);
 };
 

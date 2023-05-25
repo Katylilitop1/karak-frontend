@@ -126,11 +126,14 @@ function Gamelauncher() {
     const pusherUser = useSelector((state) => state.games.playerNames_local[0]);
 
     useEffect(() => {
+        let channel_global 
+
         (async () => {
             fetch(`${BACKEND_ADDRESS}/users/${pusherUser}`, { method: 'PUT' });
             console.log('Pusher: Mount after fetch');
 
             const channel = await pusher.subscribe('karak-development');
+            channel_global = channel
             channel.bind('pusher:subscription_succeeded', () => {
                 channel.bind('message', handleReceiveMessage);
             });
@@ -149,12 +152,13 @@ function Gamelauncher() {
 
         return () => {
             console.log('Pusher: leave');
+            if (channel_global) channel_global.unbind('message');
             fetch(`${BACKEND_ADDRESS}/users/${pusherUser}`, { method: 'DELETE' });
         }
     }, [pusherUser]);
 
     const handleReceiveMessage = (data) => {
-        console.log('Pusher: Entry in handleReceiveMessage, messages added:  ', data);
+        console.log('Pusher: Entry in Gamelauncher/handleReceiveMessage, messages received:  ', data);
         // setMessages(messages => [...messages, data]);
     };
 
