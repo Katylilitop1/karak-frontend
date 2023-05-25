@@ -1,9 +1,9 @@
+import React from 'react';
 import Tile from './tile';
 import { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faRotate } from '@fortawesome/free-solid-svg-icons';
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { pushInfo } from '../reducers/header';
 import { pushMeet, removeMeet, updateMeet } from '../reducers/meeting';
@@ -84,7 +84,6 @@ function Map() {
   dispatch( pushInfo( {username: player[playerActif].username, type:player[playerActif].type, nbTours, mooves, msg} ) );
 
   useEffect(() => {  
-    console.log(dataPioche)
     // dernière id, carte jouée par le joueur
     let playersTemp = JSON.parse(JSON.stringify(player))
     const previousCoords = playersTemp[playerActif].prevCoords.split(';');

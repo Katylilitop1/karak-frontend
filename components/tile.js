@@ -10,7 +10,7 @@ function Tile(props) {
     )
   }
 
-  let debug = true; 
+  let debug = false; 
   let debugInfo;
   if(debug) {
     if(props.card.meeting){
