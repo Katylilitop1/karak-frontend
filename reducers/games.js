@@ -47,7 +47,24 @@ export const gamesSlice = createSlice({
 
 
     //////////// mise à jour des tuiles
-    
+    removeTileMeet: (state, action) => { 
+      //retirer le meeting d'une tuile à un index donné et le passer à null
+      //action.payload = index
+      state.game.tiles[action.payload].meeting = null;
+    },
+    updateRotation: (state, action) => { 
+      //modifier la rotation (0, 1, 2 ou 3) et shifter la data d'une tuile à un index donné
+      // action.payload = index
+      console.log( state.game.tiles[action.payload] )
+      state.game.tiles[action.payload].rotation += 1;
+      let data = state.game.tiles[action.payload].data
+      data = data.unshift(data.pop());
+    },
+    flagPlayed: (state, action) => { 
+      //passer le isPlayed de null à 'x;y' à une tuile à un index donné
+      //action.payload = {index, id}
+      state.game.tiles[action.payload.index].isPlayed = action.payload.id
+    },
 
 
 
@@ -118,5 +135,7 @@ export const gamesSlice = createSlice({
   },
 });
 
-export const { setId, addPlayerNames_local, setCreator, setPlayerHeroeNames, setGame,     looseLife, restoreLife, useKey, updateInventory, setTurn, setCoords } = gamesSlice.actions;
+export const { setId, addPlayerNames_local, setCreator, setPlayerHeroeNames, setGame,        
+  removeTileMeet, updateRotation, flagPlayed,
+  looseLife, restoreLife, useKey, updateInventory, setTurn, setCoords } = gamesSlice.actions;
 export default gamesSlice.reducer;
