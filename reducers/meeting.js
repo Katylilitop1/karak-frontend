@@ -11,7 +11,7 @@ export const meetingSlice = createSlice({
     initialState,
     reducers: {
     pushMeet: (state, action) => {
-        console.log('entry in pusMeet', action.payload)
+        //console.log('entry in pusMeet', action.payload)
         if(state.value.length === 0 && action.payload?.meeting){
             state.value.push(action.payload);
         }else if(action.payload?.meeting){
@@ -19,7 +19,7 @@ export const meetingSlice = createSlice({
                     state.value.push(action.payload);
             }
         };
-        console.log('pushMeet from reducer', current(state.value))
+        //console.log('pushMeet from reducer', current(state.value))
     },
     updateMeet: (state, action) => {
         state.value.find(e => {
@@ -29,7 +29,7 @@ export const meetingSlice = createSlice({
                 e.isSkiped = action.payload.isSkiped
             } 
         } ) ;
-        console.log('updateMeet from reducer', current(state.value))
+        //console.log('updateMeet from reducer', current(state.value))
     },
     removeMeet: (state, action) => {
         state.value.splice(state.value.findIndex(e => e.coords === action.payload.coords),1)

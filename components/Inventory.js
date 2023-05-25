@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 function Inventory() {
 
   const type = useSelector((state) => state.header.value.type);
-  const inventoryPlayersReducer = useSelector((state) => state.inventory.value);
+  const inventoryPlayersReducer = useSelector((state) => state.games.game.players);
   
   const [inventoryPlayers, setInventoryPlayers] = useState(inventoryPlayersReducer)
   const [inventoryPlayer, setInventoryPlayer] = useState(inventoryPlayersReducer.find(e => e.type === type))

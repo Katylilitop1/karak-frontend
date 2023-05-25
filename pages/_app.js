@@ -5,11 +5,10 @@ import { configureStore } from '@reduxjs/toolkit';
 import games from '../reducers/games'
 import header from '../reducers/header';
 import meeting from '../reducers/meeting';
-import inventory from '../reducers/inventory';
 import position from '../reducers/position';
 
 const store = configureStore({
-  reducer: { games, header, meeting, inventory, position },
+  reducer: { games, header, meeting, position },
  });
 
 function App({ Component, pageProps }) {

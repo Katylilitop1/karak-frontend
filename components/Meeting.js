@@ -1,28 +1,29 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useSelector, useDispatch } from 'react-redux';
-import { useKey, updateInventory, looseLife } from '../reducers/inventory';
+import { useKey, updateInventory, looseLife } from '../reducers/games';
 import { updateMeet } from '../reducers/meeting';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDice, faDiceOne, faDiceTwo, faDiceThree, faDiceFour, faDiceFive, faDiceSix } from '@fortawesome/free-solid-svg-icons';
 import { useRouter } from 'next/router';
 
 function Meeting() {
-    const router = useRouter()
+    const router = useRouter();
     const dispatch = useDispatch();
+
     const meeting = useSelector((state) => state.meeting.value);
     const player = useSelector((state) => state.header.value.type);
     const mooves = useSelector((state) => state.header.value.mooves);
-    const inventory = useSelector((state) => state.inventory.value);
-    const inventoryPlayer = inventory[inventory.findIndex(e => e.type === player)]
-    const position = useSelector((state) => state.position.value.position)
-    const actualMeeting = meeting.find(e => e.coords === position)
+    const inventory = useSelector((state) => state.games.game.players);
+    const inventoryPlayer = inventory[inventory.findIndex(e => e.type === player)];
+    const position = useSelector((state) => state.position.value.position);
+    const actualMeeting = meeting.find(e => e.coords === position);
+
     const [isModalCoffreOpen, setIsModalCoffreOpen] = useState(false);
     const [isModalCombatOpen, setIsModalCombatOpen] = useState(false);
     const [showLoot, setShowLoot] = useState(false);
     const [showButton, setShowButton] = useState(true);
     const [showScoreBoard, setShowScoreBoard] = useState(false);
-
     const [firstDice, setFirstDice] =useState(null);
     const [secondDice, setSecondDice] =useState(null);
     const [totalCombatDice, setTotalCombatDice] = useState(null);
@@ -221,7 +222,7 @@ function Meeting() {
         scoreBoard = (
             <div style={{ marginLeft: "-20px", top: '1px', position: 'absolute', backgroundColor: '#E8E7DD', height: '60vh', width: '100%', display: 'flex', borderBottomRightRadius:' 20px',borderBottomLeftRadius: '20px', flexDirection:'column', alignItems: 'center', justifyContent: 'center'}}>
                 {playersScore}
-                <button onClick={router.push('/')}>
+                <button onClick={() => router.push('/')}>
                     Nouvelle partie
                 </button>
             </div>
