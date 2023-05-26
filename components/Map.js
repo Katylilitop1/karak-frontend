@@ -7,7 +7,6 @@ import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { pushInfo } from '../reducers/header';
 import { pushMeet, removeMeet, updateMeet } from '../reducers/meeting';
-import { pushPosition } from '../reducers/position';
 import Pusher from 'pusher-js';
 import { setTurn, setCoords, restoreLife } from '../reducers/games';
 
@@ -92,8 +91,6 @@ function Map() {
   if(!isOpen && meeting && (isAderyn && mooves < 4)) msg = 'Combats ou continues d’avancer..';
   if(!isOpen && meeting?.mob === 'closed_chest' && isAderyn) msg = 'Ouvres le coffre ou continues d’avancer..';
   dispatch( pushInfo( {username: player[playerActif].username, type:player[playerActif].type, nbTours, mooves, msg} ) );
-  dispatch( pushPosition( {position: player[playerActif].coords} ) )
-
 
   useEffect(() => {  
     // dernière id, carte jouée par le joueur
@@ -225,6 +222,7 @@ function Map() {
       setMooves(mooves +1)
     }
     
+    //ajouter les coordonnées de la dernière carte jouée à l'ensemble des cartes jouées et ouvrir la modal de rotation
     if(!playedCoords.includes(id)) {
       setPlayedCoords([...playedCoords, id]);
       let pioche = JSON.parse(JSON.stringify(dataPiocheTemp))
@@ -233,15 +231,6 @@ function Map() {
       setDataPiocheTemp(pioche);
       setIsOpen(true)
     }
-    
-    //ajouter les coordonnées de la dernière carte jouée à l'ensemble des cartes jouées
-    if(!playedCoords.includes(id)) {
-      setPlayedCoords([...playedCoords, id])
-      let pioche = JSON.parse(JSON.stringify(dataPiocheTemp))
-      let i = playedCoords.length;
-      pioche[i].isPlayed = id;
-      setDataPiocheTemp(pioche);
-    };
 
     //attribuer les coordonnées de la dernière carte jouée par chaque joueur
     dispatch(setCoords({playerActif, id}))
