@@ -47,7 +47,8 @@ function Map() {
 
   //initier le reducer meeting à partir des cartes déjà jouées
   useEffect(()=>{
-    for(let i = 0; i < playedCoords.length; i++){
+    console.log('BBBB', playerActif)
+    for(let i = 0; i < playedCoords.length; i++){ 
       if(dataPioche[i].meeting){
         dispatch(pushMeet({...dataPioche[i].meeting, isSkiped: false, isResolved: false}))
       }
@@ -56,33 +57,6 @@ function Map() {
 
   // game identification
   const gameId = useSelector((state) => state.games.id)
-
-  if (mooves >= 4) {
-    //meeting
-    if (meeting?.mob) {
-      dispatch(pushMeet(dataPioche[playedCoords.findIndex(coord => coord === player[playerActif].coords) + 1].meeting))
-    } else {
-      if (playerActif < player.length - 1) {
-        dispatch(setTurn(playerActif + 1))
-        setMooves(0);
-      } else {
-        dispatch(setTurn(0))
-        setNbTours(nbTours + 1)
-        setMooves(0);
-      }
-    }
-
-    if (isMeetingSkiped && mooves === 4) {
-      if (playerActif < player.length - 1) {
-        dispatch(setTurn(playerActif + 1))
-        setMooves(0);
-      } else {
-        dispatch(setTurn(0))
-        setNbTours(nbTours + 1)
-        setMooves(0);
-      }
-    }
-  }
 
   // pushInfo in store for Header
   let msg = 'Cliques pour te déplacer';
@@ -95,8 +69,8 @@ function Map() {
 
   useEffect(() => {
     // dernière id, carte jouée par le joueur
-    let playersTemp = JSON.parse(JSON.stringify(player))
-    const previousCoords = playersTemp[playerActif].prevCoords.split(';');
+    //let playersTemp = JSON.parse(JSON.stringify(player))
+    const previousCoords = player[playerActif].prevCoords.split(';');
 
     // avant-dernière id, carte jouée par le joueur
     const lastTileID = player[playerActif].coords;
@@ -112,8 +86,10 @@ function Map() {
 
   useEffect(() => {
     if (isMeetingResolved) { //|| isMeetingSkiped
+      console.log('test', dataPioche.findIndex(e => e.isPlayed === player[playerActif].coords, player[playerActif].coords) )
+      console.log('envoyé avant', playedCoords.length -1)
       dispatch(removeMeet(meetingReducer))
-      dispatch(removeTileMeet(playedCoords.length - 1))
+      dispatch(removeTileMeet(dataPioche.findIndex(e => e.isPlayed === player[playerActif].coords))) /// ça casse des fois
       setMooves(0)
 
       if (playerActif < player.length - 1) {
@@ -149,7 +125,23 @@ function Map() {
         setNbTours(nbTours + 1)
       }
     }
-  }, [isMeetingResolved, isMeetingSkiped, player, playerActif])
+  }, [isMeetingResolved, isMeetingSkiped])
+
+  useEffect(()=>{
+    if(mooves === 4 && !meeting){
+        console.log('player actif à 4', playerActif)
+        console.log('length', player.length)
+        if (playerActif < player.length - 1) {
+          dispatch(setTurn(playerActif + 1))
+          setMooves(0);
+          console.log('après', playerActif)
+        }else {
+          setNbTours(nbTours + 1)
+          dispatch(setTurn(0))
+          setMooves(0);
+        }
+      }
+  },[mooves])
 
   let modalValid;
   if (isRotationValid)
@@ -190,12 +182,6 @@ function Map() {
     )
   }
 
-  const shiftArray = (arr) => {
-    let arrTemp = [...arr]
-    arrTemp.unshift(arrTemp.pop())
-    return arrTemp
-  }
-
   const onTileClick = (id) => {
     //fonctionnalité dégradée life fountain
     if (playedCoords.includes(id) && dataPioche[playedCoords.findIndex(coord => coord === id)].tile.specificity === 'fountain') {
@@ -212,6 +198,13 @@ function Map() {
     } else if (playedCoords.includes(id)) {
       setMooves(mooves + 1)
     }
+
+    console.log('ergzetrgzertgzertghzet', mooves)
+    if(mooves === 3 && !meeting){
+      console.log('on est dedans')
+      setMooves(mooves + 1)
+    }
+    
 
     //ajouter les coordonnées de la dernière carte jouée à l'ensemble des cartes jouées et ouvrir la modal de rotation
     if (!playedCoords.includes(id)) {
@@ -246,8 +239,8 @@ function Map() {
         const x = Number(coords[0])
         const y = Number(coords[1])
 
-        if (!isOpen && playerNames_local.includes(player[playerActif].username)) {
-          if (!meeting || (meeting.mob === 'closed_chest' && mooves < 4) || (isAderyn && mooves < 4)) {
+        if (!isOpen && playerNames_local.includes(player[playerActif].username )) {
+          if (!meeting || (meeting.mob === 'closed_chest' ) || (isAderyn )) {
             if (playedCoords.length < dataPioche.length) {
               isPlayable = (
                 ((lastTileData[0] && ((playedCoords.includes(`${x};${y - 1}`) && dataPioche[playedCoords.findIndex(coord => coord === `${x};${y - 1}`)].data[2]) || !playedCoords.includes(`${x};${y - 1}`)) || (isArgentus && playedCoords.includes(`${x};${y - 1}`))) && x === i && y - 1 === j) ||
