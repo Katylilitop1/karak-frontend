@@ -42,19 +42,20 @@ function Map() {
   let meeting = dataPioche[playedCoords.findIndex(coord => coord === player[playerActif].coords)].meeting
 
   //powers identification
-  const isArgentus = (player[playerActif].type === 'Argentus');
-  const isAderyn = (player[playerActif].type === 'Aderyn');
+  const isArgentus = (player[playerActif].type === 'argentus');
+  const isAderyn = (player[playerActif].type === 'aderyn');
 
   //initier le reducer meeting à partir des cartes déjà jouées
-  useEffect(() => {
-    for (let i = 0; i < playedCoords.length; i++) {
-      dispatch(pushMeet(dataPioche[i].meeting))
+  useEffect(()=>{
+    for(let i = 0; i < playedCoords.length; i++){
+      if(dataPioche[i].meeting){
+        dispatch(pushMeet({...dataPioche[i].meeting, isSkiped: false, isResolved: false}))
+      }
     }
-  }, [])
+  }, [playerActif])
 
   // game identification
   const gameId = useSelector((state) => state.games.id)
-  const test_save = false
 
   if (mooves >= 4) {
     //meeting
@@ -68,12 +69,6 @@ function Map() {
         dispatch(setTurn(0))
         setNbTours(nbTours + 1)
         setMooves(0);
-      }
-      // the game must could be saved here
-      // go to next player in game
-      console.log('The game must be saved here')
-      if (test_save) {
-
       }
     }
 
