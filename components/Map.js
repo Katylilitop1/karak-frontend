@@ -6,7 +6,7 @@ import { faCheck, faRotate } from '@fortawesome/free-solid-svg-icons';
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { useSelector, useDispatch } from 'react-redux';
 import { pushInfo } from '../reducers/header';
-import { pushMeet, removeMeet, updateMeet, resetMeet } from '../reducers/meeting';
+import { pushMeet, removeMeet, updateMeet } from '../reducers/meeting';
 import { removeTileMeet, updateRotation, flagPlayed, setTurn, setCoords, restoreLife } from '../reducers/games';
 
 
