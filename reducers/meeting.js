@@ -19,7 +19,7 @@ export const meetingSlice = createSlice({
                     state.value.push(action.payload);
             }
         };
-        //console.log('pushMeet from reducer', current(state.value))
+        console.log('pushMeet from reducer', current(state.value))
     },
     updateMeet: (state, action) => {
         state.value.find(e => {
