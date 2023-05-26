@@ -47,7 +47,25 @@ export const gamesSlice = createSlice({
 
 
     //////////// mise à jour des tuiles
-    
+    removeTileMeet: (state, action) => { 
+      //retirer le meeting d'une tuile à un index donné et le passer à null
+      //action.payload = index
+      state.game.tiles[action.payload].meeting = null;
+    },
+
+    updateRotation: (state, action) => { 
+      //modifier la rotation (0, 1, 2 ou 3) et shifter la data d'une tuile à un index donné
+      // action.payload = index
+      state.game.tiles[action.payload].rotation += 1;
+      let data = state.game.tiles[action.payload].data
+      data = data.unshift(data.pop());
+    },
+
+    flagPlayed: (state, action) => { 
+      //passer le isPlayed de null à 'x;y' à une tuile à un index donné
+      //action.payload = {index, id}
+      state.game.tiles[action.payload.index].isPlayed = action.payload.id
+    },
 
 
 
@@ -58,14 +76,16 @@ export const gamesSlice = createSlice({
         state.game.players[state.game.players.findIndex(e => e.type === action.payload)].life -= 1;
       }
     },
+
     restoreLife: (state, action) => { 
         state.game.players[state.game.players.findIndex(e => e.type === action.payload)].life = 5;
     },
+
     useKey: (state, action) => { 
         state.game.players[state.game.players.findIndex(e => e.type === action.payload)].key = null;
     },
+
     updateInventory: (state, action) => {
-        console.log(action.payload)
         const playerIndex = state.game.players[state.game.players.findIndex(e => e.type === action.payload.playerType)];
         
         if(action.payload.loot === 'heal_portal' || action.payload.loot === 'magic_shot'){    
@@ -100,23 +120,35 @@ export const gamesSlice = createSlice({
             }
         }
     },
-    setTurn: (state, action) => { 
+
+    setTurn: (state, action) => {
+      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL; 
       //passer à true le joueur actif et passer à false les autres => state.game.player.turn
       //payload = index du joueur actif
       state.game.players.forEach(e => {
         e.turn = false
       });
       state.game.players[action.payload].turn = true;
+
+      fetch(BACKEND_URL + '/saveGame', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ game: state.game }),
+      })
+      .then(response => response.json())
+      .then(data => console.log('save the game', data))
     },
+
     setCoords: (state, action) => { 
       //modifier les coordonnées du joueur actif => state.game.player.coords & preCoords
       //payload = {index du joueur actif, coords}
       state.game.players[action.payload.playerActif].prevCoords = state.game.players[action.payload.playerActif].coords;
       state.game.players[action.payload.playerActif].coords = action.payload.id;
-      console.log(current(state.game.players));
     },
   },
 });
 
-export const { setId, addPlayerNames_local, setCreator, setPlayerHeroeNames, setGame,     looseLife, restoreLife, useKey, updateInventory, setTurn, setCoords } = gamesSlice.actions;
+export const { setId, addPlayerNames_local, setCreator, setPlayerHeroeNames, setGame,        
+  removeTileMeet, updateRotation, flagPlayed,
+  looseLife, restoreLife, useKey, updateInventory, setTurn, setCoords } = gamesSlice.actions;
 export default gamesSlice.reducer;
