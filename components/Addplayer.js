@@ -120,6 +120,8 @@ function Addplayer() {
   }
 
   const handleInputChange = (e, index) => {
+    // to be validated xxx
+    if (/\W/.test(e.target.value)) return // only alphanumeric chars allowed
     const tempPlayerNames = [...playerNames];
     tempPlayerNames[index] = e.target.value;
     setPlayerNames(tempPlayerNames);
