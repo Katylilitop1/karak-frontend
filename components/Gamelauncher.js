@@ -13,7 +13,9 @@ import Pusher from 'pusher-js';
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL;
 
-const pusher = new Pusher('2945f99e59578cb5c02a', { cluster: 'eu' });
+const testPusher = false
+let pusher = ''
+if (testPusher) pusher = new Pusher('2945f99e59578cb5c02a', { cluster: 'eu' });
 const BACKEND_ADDRESS = BACKEND_URL;
 
 function Gamelauncher() {
@@ -66,9 +68,8 @@ function Gamelauncher() {
     }
 
     useEffect(() => {
-        return;
+        // fetch_getPlayerHeroe sera appelé toutes les 5 secondes
         const local_intervalID = setInterval(fetch_getPlayerHeroe, 1000 * 5)
-        // setIntervalID(local_intervalID)(on appelle la fonction tt les 5sc)
         console.log('set intervalID: ', local_intervalID)
 
         return () => {
@@ -116,16 +117,17 @@ function Gamelauncher() {
 
     };
 
+    // start of part about pusher
 
-    //copié-collé à travailler pour Pusher :
-
-    //  export default function ChatScreen({ navigation, route: { params } }) {
-    // const [messages, setMessages] = useState([]);
-    // const [messageText, setMessageText] = useState('');
     const pusherUser = useSelector((state) => state.games.playerNames_local[0]);
 
     useEffect(() => {
-        let channel_global 
+        if (!testPusher) return
+
+        // the following must be reread/rewrite because the unmount at start
+        // does not work well (2 bind are done)
+
+        let channel_global
 
         (async () => {
             fetch(`${BACKEND_ADDRESS}/users/${pusherUser}`, { method: 'PUT' });
@@ -136,11 +138,6 @@ function Gamelauncher() {
             channel.bind('pusher:subscription_succeeded', () => {
                 channel.bind('message', handleReceiveMessage);
             });
-            // channel.bind_global((a,b) => {
-            //     console.log(a, '/yes/', b)
-            //     channel.bind('message', handleReceiveMessage);
-            //  } );
-            // console.log('Pusher: Mount after fetch l136');
 
             pusher.log = (message) => {
                 if (window.console && window.console.log) {
@@ -162,10 +159,11 @@ function Gamelauncher() {
     };
 
     const handleSendMessage = (message) => {
+        // to test pusher trigger: a message is sent to the backend which must
+        // trigger a pusher event which will be handle by handleReceiveMessage above
         if (!message) {
             return;
         }
-
         const payload = {
             text: message,
             username: pusherUser,
@@ -181,11 +179,10 @@ function Gamelauncher() {
 
         // setMessageText('');
     };
-    //Fin du copié-collé pour Pusher
+    // end part about pusher
 
     const karakCircularProgress = styled(CircularProgress)({ color: "#324E01" })
 
-    const testPusher = false
     return (
         <div className={styles.container}>
 
