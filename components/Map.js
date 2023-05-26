@@ -6,7 +6,7 @@ import { faCheck, faRotate } from '@fortawesome/free-solid-svg-icons';
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { useSelector, useDispatch } from 'react-redux';
 import { pushInfo } from '../reducers/header';
-import { pushMeet, removeMeet, updateMeet } from '../reducers/meeting';
+import { pushMeet, removeMeet, updateMeet, resetMeet } from '../reducers/meeting';
 import { removeTileMeet, updateRotation, flagPlayed, setTurn, setCoords, restoreLife } from '../reducers/games';
 
 
@@ -37,15 +37,17 @@ function Map() {
   let meeting = dataPioche[playedCoords.findIndex(coord => coord === player[playerActif].coords)].meeting
 
   //powers identification
-  const isArgentus = (player[playerActif].type === 'Argentus');
-  const isAderyn = (player[playerActif].type === 'Aderyn');
+  const isArgentus = (player[playerActif].type === 'argentus');
+  const isAderyn = (player[playerActif].type === 'aderyn');
 
   //initier le reducer meeting à partir des cartes déjà jouées
   useEffect(()=>{
     for(let i = 0; i < playedCoords.length; i++){
-      dispatch(pushMeet(dataPioche[i].meeting))
+      if(dataPioche[i].meeting){
+        dispatch(pushMeet({...dataPioche[i].meeting, isSkiped: false, isResolved: false}))
+      }
     }
-  },[])
+  },[playerActif])
   
   if(mooves >= 4){
     //meeting

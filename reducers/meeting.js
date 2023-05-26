@@ -32,11 +32,15 @@ export const meetingSlice = createSlice({
         //console.log('updateMeet from reducer', current(state.value))
     },
     removeMeet: (state, action) => {
-        state.value.splice(state.value.findIndex(e => e.coords === action.payload.coords),1)
+        state.value.splice(state.value.findIndex(e => e.coords === action.payload.coords),1);
+    },
+    resetMeet: (state) => {
+        state.value = [];
+        console.log(state.value)
     },
 
  },
 });
 
-export const { pushMeet, updateMeet, removeMeet } = meetingSlice.actions;
+export const { pushMeet, updateMeet, removeMeet, resetMeet } = meetingSlice.actions;
 export default meetingSlice.reducer;
